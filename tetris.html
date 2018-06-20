@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Tetris</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="tetris.css" />
+    <script src="tetris.js"></script>
+    <style>
+        .table-container {
+            margin-top: 100px;
+            margin-left: 100px;
+        }
+        table {
+            background-color: rgb(41, 118, 121) ;
+            border-collapse: collapse;
+        }
+        td {
+            border: 1px solid rgb(226, 226, 226);
+            width: 30px;
+            height: 30px;
+        }
+        .color {
+            background-color: rgb(196, 169, 21);
+        }
+    </style>
+</head>
+<body>
+    <button class="left">Left</button>
+    <button class="right">Right</button>
+    <div class="table-container">
+        <script>
+            var i, j;
+            var rowsNum = 20;
+            var colsNum = 10;
+        //Переменные, содержащие отклонение координат фигуры от стартового положения:
+            var dStr;
+            var dCol;
+            var timerMoveDown;
+            var timerDelete;
+        //Объект "startCts" хранит стартовые координаты, которые определяют тип фигуры:
+            var startCts = {
+                "sq":{
+                    "str": [0, 1],
+                    "col": [[4, 5],[4, 5]],
+                    "color": "color"
+                },
+                "stick":{
+                    "str": [0],
+                    "col": [[3, 4, 5, 6]],
+                    "color": "color"
+                },
+                "zed":{
+                    "str": [0, 1],
+                    "col": [[4, 5],[5, 6]],
+                    "color": "color"
+                },
+                "zed-r":{
+                    "str": [0, 1],
+                    "col": [[4, 5],[3, 4]],
+                    "color": "color"
+                },
+                "el":{
+                    "str": [0, 1],
+                    "col": [[4, 5, 6],[4]],
+                    "color": "color"
+                },
+                "el-r":{
+                    "str": [0, 1],
+                    "col": [[3, 4, 5],[5]],
+                    "color": "color"
+                },
+                "ti":{
+                    "str": [0, 1],
+                    "col": [[3, 4, 5],[4]],
+                    "color": "color"
+                }
+            }
+       
+            /*Проект объекта "Figure": 
+            var Figure = {
+                "dStr": 0,
+                "dCol": 0,
+                "getIndex": detRandom,
+                "index": this.getIndex(0, 6),
+                "startCts": Object.keys(startCts)[this.index],
+            }
+            */ 
+ 
+        //Функция "tableMaker" создаёт HTML-таблицу с заданным количеством строк и столбцов и размещает эту таблицу в элементе "tableContainer":
+            function tableMaker(tableContainer, rowsNum, colsNum) { 
+                var tbody = document.createElement("tbody");
+                var rows = [];
+                for (i = 0; i < rowsNum; i++){
+                    rows[i] = document.createElement("tr");
+                    var cells = [];
+                    for (j = 0; j < colsNum; j++){
+                        cells[j] = document.createElement("td");
+                        rows[i].appendChild(cells[j]);
+                    }
+                    tbody.appendChild(rows[i]);
+                }
+                table.appendChild(tbody);
+                tableContainer.appendChild(table);
+            }
+        //Функция "getRandNum" возвращает случайное число в заданном интервале от "min" до "max" включительно:   
+            function getRandNum(min, max) {
+                return Math.round(Math.random()*(max - min) + min);
+            }
+        //Функции "changeStr" и "changeCol" изменяют текущую координату отображения фигуры:
+            function changeStr() {
+                dStr++;
+            }
+            function changeColRight() {
+                dCol++;
+            }
+            function changeColLeft() {
+                dCol--;
+            }
+
+        //Функция "createFig" отрисовывает фигуру в текущих координатах (объект "fig" с поправками "dStr" и "dCol"):
+            function createFig(table, fig) {
+                for(i = 0; i < fig.str.length; i++) {
+                        for(j = 0; j < fig.col[i].length; j++) {
+                            table.rows[fig.str[i] + dStr].cells[fig.col[i][j] + dCol].classList.add(fig.color);
+                        }
+                    }
+                }
+        //Функция "deleteFig" удаляет созданную фигуру из текущих координат (объект "fig" с поправками "dStr" и "dCol"):
+            function deleteFig(table, fig) {
+                for(i = 0; i < fig.str.length; i++) {
+                    for(j = 0; j < fig.col[i].length; j++) {
+                        table.rows[fig.str[i] + dStr].cells[fig.col[i][j] + dCol].classList.remove(fig.color);
+                    }
+                }
+            changeStr(); 
+                  
+            }
+        //Фунуция "moveDown" имитирует движение вниз:
+            function moveDown(table, fig) {
+            //Создаём фигуру в координатах "fig":
+                createFig(table, fig);
+                if((fig.str[fig.str.length - 1]) + dStr === 19){//фигура долетела до дна;
+                    
+                    start(); 
+                    return;
+                }
+            //Через Timeout удаляем:
+                timerDelete = setTimeout(deleteFig, 580, table, fig);
+                
+            }
+
+            function start() {
+                dCol = 0;
+                dStr = 0;
+                clearTimeout(timerDelete);
+                clearInterval(timerMoveDown);
+                var index = getRandNum(0, 6);
+            //Получаем из объекта-библиотеки "startsCts" стартовые координаты рандомной фигуры:
+                var fig = startCts[Object.keys(startCts)[index]];
+                timerMoveDown = setInterval(moveDown, 600, table, fig);
+            }
+                      
+            var btnLeft = document.querySelector(".left");
+            var btnRight = document.querySelector(".right");
+            btnLeft.addEventListener("click", changeColLeft);
+            btnRight.addEventListener("click", changeColRight);
+
+            var table = document.createElement("table");
+            tableMaker(document.querySelector(".table-container"), rowsNum, colsNum);
+            //Функция запуска игры:
+            start();
+        </script>
+   </div>
+</body>
+</html>
